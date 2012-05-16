@@ -1,0 +1,24 @@
+fs       = require 'fs'
+path     = require 'path'
+sealdeal = require '../lib/sealdeal'
+server   = require '../lib/server'
+
+config = -> JSON.parse fs.readFileSync('config.json')
+
+commands =
+  init: ->
+    unless process.argv.length >= 4
+      console.log('Usage: sealdeal init NAME')
+      return
+
+    filePath = process.argv[3]
+    console.log filePath
+    fs.mkdir(filePath) unless path.existsSync filePath
+    sealdeal.copyTree path.resolve(__dirname, '../site_templates/default'), filePath
+  server: -> server.run config()
+  build:  -> sealdeal.build config()
+
+if process.argv.length < 3
+  console.log 'Tasks:', (command for own command, fn of commands).join(', ')
+else
+  commands[process.argv[2]]()

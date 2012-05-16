@@ -1,0 +1,11 @@
+sealdeal is a set of tools for streamlining your front end build process.
+
+Current features include automatic js/css concatenation, pre-processing
+assets, shared layout files for html pages and a test server.
+
+Future plans:
+  minification
+  plugin system to add other compilers/preprocessors/templating languages
+  documentation
+  better support for project templates
+

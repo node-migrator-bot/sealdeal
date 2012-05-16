@@ -1,20 +1,55 @@
-#! /usr/bin/env coffee
+#!/usr/bin/env node
+(function() {
+  var command, commands, config, fn, fs, path, sealdeal, server,
+    __hasProp = {}.hasOwnProperty;
 
-fs       = require 'fs'
-path     = require 'path'
-sealdeal = require '../lib/sealdeal'
-server   = require '../lib/server'
+  fs = require('fs');
 
-config   = JSON.parse fs.readFileSync('config.json')
+  path = require('path');
 
-commands =
-  init: ->
-    unless process.argv.length >= 4
-      console.log('Usage: sealdeal init NAME')
-      return
+  sealdeal = require('../lib/sealdeal');
 
-    filePath = process.argv[3]
-    fs.mkdir(filePath) unless path.existsSync filePath
-    sealdeal.copyTree path.join(__dirname, 'site_templates/default'), filePath
-  when 'server' then server.run config
-  when 'build'  then sealdeal.build config
+  server = require('../lib/server');
+
+  config = function() {
+    return JSON.parse(fs.readFileSync('config.json'));
+  };
+
+  commands = {
+    init: function() {
+      var filePath;
+      if (!(process.argv.length >= 4)) {
+        console.log('Usage: sealdeal init NAME');
+        return;
+      }
+      filePath = process.argv[3];
+      console.log(filePath);
+      if (!path.existsSync(filePath)) {
+        fs.mkdir(filePath);
+      }
+      return sealdeal.copyTree(path.resolve(__dirname, '../site_templates/default'), filePath);
+    },
+    server: function() {
+      return server.run(config());
+    },
+    build: function() {
+      return sealdeal.build(config());
+    }
+  };
+
+  if (process.argv.length < 3) {
+    console.log('Tasks:', ((function() {
+      var _results;
+      _results = [];
+      for (command in commands) {
+        if (!__hasProp.call(commands, command)) continue;
+        fn = commands[command];
+        _results.push(command);
+      }
+      return _results;
+    })()).join(', '));
+  } else {
+    commands[process.argv[2]]();
+  }
+
+}).call(this);

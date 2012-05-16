@@ -3,7 +3,13 @@
   , "description": "front end build tools ftw!"
   , "author": "Ian Fitzpatrick <ian@grapheffect.com>"
   , "version": "0.0.1"
+  , "repository": {
+      "type": "git"
+    , "url": "https://github.com/ifitzpatrick/sealdeal"
+  }
   , "main": "lib/sealdeal.js"
+  , "bin": "bin/sealdeal"
+  , "license": "MIT"
   , "engines" : ["node >= 0.6.1"]
   , "dependencies": {
       "express": "2.5.8"

@@ -228,15 +228,16 @@ isInsideDir = (dir, containingDir) ->
   containingDir += '/' unless containingDir.slice(-1) is '/'
   dir.indexOf(containingDir) is 0
 
-# Recursively creates directories in file path before writing to file
-writeFileRecursive = (filename, data) ->
-  mkdir = (dirname) ->
-    unless path.existsSync(dirname)
-      mkdir(path.dirname dirname)
-      fs.mkdirSync dirname
+# Recursively creates directories
+mkdirRecursive = (dirname) ->
+  unless path.existsSync(dirname)
+    mkdirRecursive(path.dirname dirname)
+    fs.mkdirSync dirname
 
-  mkdir path.dirname(filename)
-  fs.writeFileSync filename, data
+# Recursively creates directories in file path before writing to file
+writeFileRecursive = (filename, data, encoding) ->
+  mkdirRecursive path.dirname(filename)
+  fs.writeFileSync filename, data, encoding
 
 copyTree = (fromPath, toPath) ->
   files = getFiles fromPath
@@ -245,11 +246,15 @@ copyTree = (fromPath, toPath) ->
     data = fs.readFileSync filename
     writeFileRecursive targetFilename, data
 
+compileCoffeeFileTo = (file, target, modify=_.identity) ->
+  js = jsExtensions['coffee'] fs.readFileSync(file, 'utf8')
+  writeFileRecursive target, modify(js), 'utf8'
+
 compileJSDir = (dir, target) ->
   for file in jsFilter getFiles(dir)
     js = compileJSFile file
     filename = path.join target, path.basename(removeExt file)
-    writeFileRecursive filename, js
+    writeFileRecursive filename, js, 'utf8'
 
 build = (config) ->
   {src, concatJS, concatCSS} = config
@@ -286,17 +291,18 @@ build = (config) ->
   concatToTarget(jsDirsPath,  'js/app.js',   concatJSDir)  if concatJS?
   concatToTarget(cssDirsPath, 'css/app.css', concatCSSDir) if concatCSS?
 
-module.exports.getFiles           = getFiles
-module.exports.fileType           = fileType
-module.exports.concatJSDir        = concatJSDir
-module.exports.concatCSSDir       = concatCSSDir
-module.exports.compileJSDir       = compileJSDir
-module.exports.compileJSFile      = compileJSFile
-module.exports.compileHTMLFile    = compileHTMLFile
-module.exports.removeExt          = removeExt
-module.exports.readHTMLPage       = readHTMLPage
-module.exports.readFile           = readFile
-module.exports.writeFileRecursive = writeFileRecursive
-module.exports.copyTree           = copyTree
-module.exports.build              = build
+module.exports.getFiles            = getFiles
+module.exports.fileType            = fileType
+module.exports.concatJSDir         = concatJSDir
+module.exports.concatCSSDir        = concatCSSDir
+module.exports.compileJSDir        = compileJSDir
+module.exports.compileJSFile       = compileJSFile
+module.exports.compileCoffeeFileTo = compileCoffeeFileTo
+module.exports.compileHTMLFile     = compileHTMLFile
+module.exports.removeExt           = removeExt
+module.exports.readHTMLPage        = readHTMLPage
+module.exports.readFile            = readFile
+module.exports.writeFileRecursive  = writeFileRecursive
+module.exports.copyTree            = copyTree
+module.exports.build               = build
 
