@@ -1,0 +1,17 @@
+doctype 5
+html(lang="en")
+  head
+    title= title
+    meta(charset="utf-8")
+    link(rel="stylesheet", type="text/css", href="css/bootstrap.css")
+    link(rel="stylesheet", type="text/css", href="css/app.css")
+
+  body
+    div!= content
+
+    script !{templateNamespace} = !{templates}
+    script(src="js/jquery.js")
+    script(src="js/underscore.js")
+    script(src="js/backbone.js")
+    script(src="js/app.js")
+

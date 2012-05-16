@@ -1,0 +1,16 @@
+{
+    "name": "sealdeal"
+  , "description": "front end build tools ftw!"
+  , "author": "Ian Fitzpatrick <ian@grapheffect.com>"
+  , "version": "0.0.1"
+  , "main": "lib/sealdeal.js"
+  , "engines" : ["node >= 0.6.1"]
+  , "dependencies": {
+      "express": "2.5.8"
+    , "underscore": ">= 1.3.3"
+    , "jade": ">= 0.26.0"
+    , "less": ">= 1.3.0"
+    , "stylus": ">= 0.26.1"
+    , "coffee-script": ">= 1.3.1"
+  }
+}
