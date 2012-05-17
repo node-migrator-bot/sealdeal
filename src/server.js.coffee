@@ -34,36 +34,11 @@ module.exports =
 
     appPath = path.join cwd, config.src
 
-    app.get '/js/app.js', (req, res) ->
-      res.contentType 'application/javascript'
-      res.send sealdeal.concatJSDir path.join(appPath, 'js/app')
+    app.get '/js/app.js', sealdeal.jsRoute appPath, config
 
-    app.get '/css/app.css', (req, res) ->
-      res.contentType 'text/css'
-      res.send sealdeal.concatCSSDir path.join(appPath, 'css/app')
+    app.get '/css/app.css', sealdeal.cssRoute appPath, config
 
-    preprocessor = (req, res, next) ->
-      layout = path.join appPath, config.layout
-      filename = req.params[0]
-      filePath = path.join appPath, filename
-
-      title = config.pages?[filename]?.title or config.title
-
-      fs.stat filePath, (err, fileStats) ->
-        if fileStats and fileStats.isDirectory()
-          next()
-        else
-          txt = sealdeal.readFile filePath, config
-
-          if txt
-            fileType = sealdeal.fileType filePath
-            switch fileType
-              when 'js'   then res.contentType 'application/javascript'
-              when 'css'  then res.contentType 'text/css'
-              when 'html' then res.contentType 'text/html'
-            res.send txt
-          else
-            next()
+    preprocessor = sealdeal.preprocessorRoute appPath, config
 
     app.get '/*', preprocessor
     app.get '/', (req, res, next) ->

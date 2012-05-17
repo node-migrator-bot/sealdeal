@@ -1,6 +1,5 @@
 fs   = require 'fs'
 path = require 'path'
-_    = require 'underscore'
 
 requireCompiler = (name, callback = (txt, compiler) ->
   compiler.compile txt
@@ -88,17 +87,29 @@ fileType = (filename) ->
     return 'html'
   else false
 
-compileFile = (filename, extensions) ->
+compileText = (txt, filename, extensions) ->
   compiler = getCompiler filename
   compile = extensions[compiler]
-  txt = fs.readFileSync filename, 'utf8'
   if compile? then compile(txt) else txt
+
+compileFile = (filename, extensions) ->
+  txt = fs.readFileSync filename, 'utf8'
+  compileText txt, filename, extensions
+
+compileHTML = (txt, filename) ->
+  compileText txt, filename, htmlExtensions
 
 compileHTMLFile = (filename) ->
   compileFile filename, htmlExtensions
 
+compileJS = (txt, filename) ->
+  compileText txt, filename, jsExtensions
+
 compileJSFile = (filename) ->
   compileFile filename, jsExtensions
+
+compileCSS = (txt, filename) ->
+  compileText txt, filename, cssExtensions
 
 compileCSSFile = (filename) ->
   compileFile filename, cssExtensions
@@ -164,12 +175,14 @@ readFile = (filename, config) ->
 fileConfig = (filename, config) ->
   relativeFilename = path.relative config.src, filename
   title = config.pages?[relativeFilename]?.title or config.title
+  pageLocals = config.pages?[relativeFilename]?.pageLocals or config.pageLocals
 
   filename: filename
   layout: path.join config.src, config.layout
   templates: 'src/templates'
   templateNamespace: config.templateNamespace or 'APP_TEMPLATES'
   title: title
+  pageLocals: pageLocals
 
 
 # Remove Preprocessor extension
@@ -177,50 +190,66 @@ removeExt = (filename, ext) ->
   newFilename = (/([a-z]*\.[a-z]*)(\.[a-z]*)?$/i).exec(filename)?[1]
   if newFilename? then newFilename else false
 
+withoutItem = (array, excluded) ->
+  (item for item in array when item isnt excluded)
+
 itemToLast = (array, item) ->
-  _.without(array, item).push item
+  withoutItem(array, item).concat [item]
+
+commentDelimiters =
+  js: '//'
+  coffee: '#'
 
 extractRequires = do ->
   regexes = {}
   (txt, commentDelimiter) ->
     requireRegexp = regexes[commentDelimiter]
     unless requireRegexp?
-      requireRegexp = new RegExp "^#{commentDelimiter}\= require ['\"]([^'\"]*)['\"]$", 'gim'
+      requireRegexp = new RegExp "^\\s*#{commentDelimiter}\= require ['\"]([^'\"]*)['\"]$", 'gim'
       regexes[commentDelimiter] = requireRegexp
 
     requiredFiles = requireRegexp.exec(txt)?.slice(1)
 
     if requiredFiles? then requiredFiles else []
 
-extractJSRequires = (txt) -> extractRequires txt, '//'
+extractJSRequires = (txt, filename) ->
+  compiler = getCompiler filename
+  if compiler
+    extractRequires txt, commentDelimiters[compiler]
+  else
+    extractRequires txt, commentDelimiters.js
 
-concatFiles = (files, compile, requireFunc) ->
+concatFiles = (files, compile, requireFunc, root) ->
   txt = ''
-  compiled = {}
+  filesRead = {}
   while files.length > 0
     file = files[0]
-    fileTxt = compiled[file]
+    fileTxt = filesRead[file]
     unless fileTxt?
-      fileTxt = compile file
-      compiled[file] = fileTxt
+      fileTxt = fs.readFileSync file, 'utf8'
+      filesRead[file] = fileTxt
 
-    requires = requireFunc fileTxt
-    if _.intersection(files, requires).length
-      itemToLast(files, file)
+    requires = requireFunc fileTxt, file
+    if do (->
+      for filename in files
+        return true if removeExt(path.relative(root, filename)) in requires
+      return false
+    )
+      files = itemToLast(files, file)
     else
-      delete compiled[file]
-      files = _.without(files, file)
-      txt += fileTxt
+      delete filesRead[file]
+      files = withoutItem(files, file)
+      txt += compile fileTxt, file
 
   return txt
 
 concatJSDir = (dir, minify) ->
   files = jsFilter getFiles(dir)
-  concatFiles files, compileJSFile, extractJSRequires
+  concatFiles files, compileJS, extractJSRequires, dir
 
 concatCSSDir = (dir, minify) ->
   files = cssFilter getFiles(dir)
-  concatFiles files, compileCSSFile, -> []
+  concatFiles files, compileCSS, -> []
 
 isInsideDir = (dir, containingDir) ->
   return false unless dir? and containingDir?
@@ -246,7 +275,7 @@ copyTree = (fromPath, toPath) ->
     data = fs.readFileSync filename
     writeFileRecursive targetFilename, data
 
-compileCoffeeFileTo = (file, target, modify=_.identity) ->
+compileCoffeeFileTo = (file, target, modify=(n)->n) ->
   js = jsExtensions['coffee'] fs.readFileSync(file, 'utf8')
   writeFileRecursive target, modify(js), 'utf8'
 
@@ -257,6 +286,9 @@ compileJSDir = (dir, target) ->
     writeFileRecursive filename, js, 'utf8'
 
 build = (config) ->
+  src = config.src
+  jsDirs = config.concatJS
+  cssDirs = config.concatCSS
   {src, concatJS, concatCSS} = config
   target = config.build
 
@@ -266,11 +298,11 @@ build = (config) ->
     txt = func dir, true
     writeFileRecursive path.join(target, filename), txt
 
-  jsDirsPath  = if concatJS
-    path.join src, concatJS
+  jsDirsPath  = if jsDirs
+    path.join src, jsDirs
   else null
-  cssDirsPath = if concatCSS
-    path.join src, concatCSS
+  cssDirsPath = if cssDirs
+    path.join src, cssDirs
   else null
   templatePath = path.join src, config.templates
 
@@ -288,8 +320,42 @@ build = (config) ->
       targetFilename = path.join(target, path.join(path.dirname(relativeFilename), removeExt(relativeFilename)))
       writeFileRecursive targetFilename, data
 
-  concatToTarget(jsDirsPath,  'js/app.js',   concatJSDir)  if concatJS?
-  concatToTarget(cssDirsPath, 'css/app.css', concatCSSDir) if concatCSS?
+  concatToTarget(jsDirsPath,  'js/app.js',   concatJSDir)  if jsDirs?
+  concatToTarget(cssDirsPath, 'css/app.css', concatCSSDir) if cssDirs?
+
+jsRoute = (appPath, config) ->
+  (req, res) ->
+    res.contentType 'application/javascript'
+    res.send concatJSDir path.join(appPath, config.concatJS)
+
+cssRoute = (appPath, config) ->
+  (req, res) ->
+    res.contentType 'text/css'
+    res.send concatCSSDir path.join(appPath, config.concatCSS)
+
+preprocessorRoute = (appPath, config) ->
+  (req, res, next) ->
+    filename = req.params[0]
+    filePath = path.join appPath, filename
+
+    title = config.pages?[filename]?.title or config.title
+
+    fs.stat filePath, (err, fileStats) ->
+      if fileStats and fileStats.isDirectory()
+        next()
+      else
+        txt = readFile filePath, config
+
+        if txt
+          fileType = fileType filePath
+          switch fileType
+            when 'js'   then res.contentType 'application/javascript'
+            when 'css'  then res.contentType 'text/css'
+            when 'html' then res.contentType 'text/html'
+          res.send txt
+        else
+          next()
+
 
 module.exports.getFiles            = getFiles
 module.exports.fileType            = fileType
@@ -305,4 +371,8 @@ module.exports.readFile            = readFile
 module.exports.writeFileRecursive  = writeFileRecursive
 module.exports.copyTree            = copyTree
 module.exports.build               = build
+
+module.exports.jsRoute             = jsRoute
+module.exports.cssRoute            = cssRoute
+module.exports.preprocessorRoute   = preprocessorRoute
 

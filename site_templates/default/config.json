@@ -7,7 +7,7 @@
   "layout": "layout.html.jade",
   "templates": "templates",
   "pages": {
-    "/index.html": {
+    "index.html": {
       "title": "Welcome to Cool App!"
     }
   }
