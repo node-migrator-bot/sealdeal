@@ -2,7 +2,6 @@ fs        = require 'fs'
 path      = require 'path'
 url       = require 'url'
 http      = require 'http'
-httpProxy = require 'http-proxy'
 
 requireCompiler = (name, callback = (txt, compiler) ->
   compiler.compile txt
