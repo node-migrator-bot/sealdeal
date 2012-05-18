@@ -159,7 +159,6 @@ readHTMLPage = (args) ->
 
   else
     context = renderMain(args.pageLocals or {})
-    console.log context
     content context
 
 readFile = (filename, config) ->
@@ -357,8 +356,8 @@ preprocessorRoute = (appPath, config) ->
         txt = readFile filePath, config
 
         if txt
-          fileType = fileType filePath
-          switch fileType
+          ft = fileType filePath
+          switch ft
             when 'js'   then res.contentType 'application/javascript'
             when 'css'  then res.contentType 'text/css'
             when 'html' then res.contentType 'text/html'
