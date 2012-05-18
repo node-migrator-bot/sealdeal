@@ -131,10 +131,7 @@ readHTMLPage = (args) ->
   if args.filename is args.layout
     return false
 
-  content = compileHTMLFile args.filename
-  if args.layout?
-    context = args.layoutLocals or {}
-    context.content = content args.pageLocals or {}
+  renderMain = (context) ->
     context.title ?= args.title or ''
     templatesDir = args.templates
     templateNamespace = args.templateNamespace
@@ -151,9 +148,19 @@ readHTMLPage = (args) ->
       context.templates         = JSON.stringify templates
       context.templateNamespace = templateNamespace
 
+    return context
+
+  content = compileHTMLFile args.filename
+  if args.layout?
+    context = args.layoutLocals or {}
+    context.content = content args.pageLocals or {}
+    context = rendermain context
     compileHTMLFile(args.layout) context
 
-  else content
+  else
+    context = renderMain(args.pageLocals or {})
+    console.log context
+    content context
 
 readFile = (filename, config) ->
   args = fileConfig filename, config
@@ -181,7 +188,7 @@ fileConfig = (filename, config) ->
   pageLocals = config.pages?[relativeFilename]?.pageLocals or config.pageLocals
 
   filename: filename
-  layout: path.join config.src, config.layout
+  layout: if config.layout then path.join(config.src, config.layout) else null
   templates: 'src/templates'
   templateNamespace: config.templateNamespace or 'APP_TEMPLATES'
   title: title
