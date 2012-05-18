@@ -34,9 +34,9 @@ module.exports =
 
     appPath = path.join cwd, config.src
 
-    app.get '/js/app.js', sealdeal.jsRoute appPath, config
+    app.get '/js/app.js', sealdeal.jsRoute path.join(appPath, config.concatJS)
 
-    app.get '/css/app.css', sealdeal.cssRoute appPath, config
+    app.get '/css/app.css', sealdeal.cssRoute path.join(appPath, config.concatCSS)
 
     preprocessor = sealdeal.preprocessorRoute appPath, config
 
@@ -44,6 +44,8 @@ module.exports =
     app.get '/', (req, res, next) ->
       req.params[0] = "/index.html"
       preprocessor req, res, next
+
+    sealdeal.addProxyRoutes app, config.proxies
 
     app.listen 3000
     console.log "Express server listening on port %d in %s mode", app.address().port, app.settings.env

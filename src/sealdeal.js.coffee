@@ -1,5 +1,8 @@
-fs   = require 'fs'
-path = require 'path'
+fs        = require 'fs'
+path      = require 'path'
+url       = require 'url'
+http      = require 'http'
+httpProxy = require 'http-proxy'
 
 requireCompiler = (name, callback = (txt, compiler) ->
   compiler.compile txt
@@ -157,6 +160,7 @@ readFile = (filename, config) ->
   args = fileConfig filename, config
 
   directory = path.dirname filename
+  return false unless path.existsSync directory
   files = fs.readdirSync directory
   for dirFile in files
     if dirFile.indexOf(path.basename filename) is 0
@@ -323,15 +327,15 @@ build = (config) ->
   concatToTarget(jsDirsPath,  'js/app.js',   concatJSDir)  if jsDirs?
   concatToTarget(cssDirsPath, 'css/app.css', concatCSSDir) if cssDirs?
 
-jsRoute = (appPath, config) ->
+jsRoute = (jsPath) ->
   (req, res) ->
-    res.contentType 'application/javascript'
-    res.send concatJSDir path.join(appPath, config.concatJS)
+    res.contentType 'application/javascript; charset=utf-8'
+    res.send concatJSDir jsPath
 
-cssRoute = (appPath, config) ->
+cssRoute = (cssPath) ->
   (req, res) ->
     res.contentType 'text/css'
-    res.send concatCSSDir path.join(appPath, config.concatCSS)
+    res.send concatCSSDir cssPath
 
 preprocessorRoute = (appPath, config) ->
   (req, res, next) ->
@@ -356,6 +360,34 @@ preprocessorRoute = (appPath, config) ->
         else
           next()
 
+addProxyRoutes = (app, routesHash) ->
+  #proxy = new httpProxy.RoutingProxy()
+  for own route, proxyConfig of routesHash
+    do (route) ->
+      app.all path.join(route, '*'), (req, res) ->
+        url = path.relative route, req.url
+        proxyReqConfig =
+          hostname: proxyConfig.hostname or 'localhost'
+          port: proxyConfig.port or 8080
+          method: req.method
+          path: path.join (proxyConfig.path or '/'), url
+          headers: req.headers
+          auth: req.auth
+
+        proxyReq = http.request(proxyReqConfig, (proxyRes) ->
+          data = ''
+          proxyRes.on 'data', (resData) -> data += resData
+          proxyRes.on 'end', ->
+            for own header, value in proxyRes.headers
+              res.header header, value
+            res.send data
+        )
+        if req.method isnt 'GET'
+          proxyReq.write JSON.stringify req.body
+
+        proxyReq.end()
+      #proxy.proxyRequest req, res, proxyConfig
+
 
 module.exports.getFiles            = getFiles
 module.exports.fileType            = fileType
@@ -375,4 +407,5 @@ module.exports.build               = build
 module.exports.jsRoute             = jsRoute
 module.exports.cssRoute            = cssRoute
 module.exports.preprocessorRoute   = preprocessorRoute
+module.exports.addProxyRoutes      = addProxyRoutes
 

@@ -10,5 +10,12 @@
     "index.html": {
       "title": "Welcome to Cool App!"
     }
+  },
+  "proxies": {
+    "/api": {
+      "hostname": "localhost",
+      "port"    : 9000,
+      "path"    : "/"
+    }
   }
 }
