@@ -3,6 +3,9 @@ path      = require 'path'
 url       = require 'url'
 http      = require 'http'
 
+stylus    = require 'stylus'
+nib       = require 'nib'
+
 requireCompiler = (name, callback = (txt, compiler) ->
   compiler.compile txt
 ) ->
@@ -17,10 +20,10 @@ jsExtensions = {
 }
 
 cssExtensions = {
-  'less': (txt) ->
-  'styl': requireCompiler 'stylus', (txt, compiler) ->
+  'less': (txt, filename) ->
+  'styl': (txt, filename) ->
     css = ''
-    compiler.render txt, (err, out) -> css = out
+    stylus(txt).set('filename', filename).use(nib()).import('nib').render (err, out) -> css = out
     return css
 }
 
@@ -92,7 +95,7 @@ fileType = (filename) ->
 compileText = (txt, filename, extensions) ->
   compiler = getCompiler filename
   compile = extensions[compiler]
-  if compile? then compile(txt) else txt
+  if compile? then compile(txt, filename) else txt
 
 compileFile = (filename, extensions) ->
   txt = fs.readFileSync filename, 'utf8'
