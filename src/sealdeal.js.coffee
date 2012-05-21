@@ -385,6 +385,7 @@ addProxyRoutes = (app, routesHash) ->
           proxyRes.on 'end', ->
             for own header, value in proxyRes.headers
               res.header header, value
+            res.contentType proxyRes.header('content-type')
             res.send data
         )
         if req.method isnt 'GET'
