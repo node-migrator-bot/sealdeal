@@ -15,6 +15,7 @@ config.json:
     "title": "Cool App!", //This title will be displayed in your page templates in a <title /> tag
     "src": "src", //The directory where your source files are stored
     "build": "build", //The directory to which sealdeal builds static assests
+    "port": 3000, //The port that the test server will listen on
     "concatJS": "js/app", //Directory that gets served as concatenated js
     "concatCSS": "css/app", //Directory that gets served as concatenated css
     "layout": "layout.html.jade", //Default layout file
@@ -33,3 +34,6 @@ config.json:
     }
   }
 
+Projects that inspired sealdeal:
+[Middleman](http://middlemanapp.com/)
+[Grunt](http://gruntjs.com/)

@@ -47,5 +47,5 @@ module.exports =
 
     sealdeal.addProxyRoutes app, config.proxies
 
-    app.listen 3000
+    app.listen config.port or 3000
     console.log "Express server listening on port %d in %s mode", app.address().port, app.settings.env
