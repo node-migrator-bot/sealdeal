@@ -36,7 +36,7 @@ module.exports =
 
     app.get '/js/app.js', sealdeal.jsRoute path.join(appPath, config.concatJS)
 
-    app.get '/css/app.css', sealdeal.cssRoute path.join(appPath, config.concatCSS)
+    #app.get '/css/app.css', sealdeal.cssRoute path.join(appPath, config.concatCSS)
 
     preprocessor = sealdeal.preprocessorRoute appPath, config
 

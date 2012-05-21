@@ -3,7 +3,6 @@
   "src": "src",
   "build": "build",
   "concatJS": "js/app",
-  "concatCSS": "css/app",
   "layout": "layout.html.jade",
   "templates": "templates",
   "pages": {

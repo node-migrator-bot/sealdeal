@@ -157,7 +157,7 @@ readHTMLPage = (args) ->
   if args.layout?
     context = args.layoutLocals or {}
     context.content = content args.pageLocals or {}
-    context = rendermain context
+    context = renderMain context
     compileHTMLFile(args.layout) context
 
   else

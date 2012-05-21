@@ -9,3 +9,27 @@ Future plans:
   documentation
   better support for project templates
 
+
+config.json:
+  {
+    "title": "Cool App!", //This title will be displayed in your page templates in a <title /> tag
+    "src": "src", //The directory where your source files are stored
+    "build": "build", //The directory to which sealdeal builds static assests
+    "concatJS": "js/app", //Directory that gets served as concatenated js
+    "concatCSS": "css/app", //Directory that gets served as concatenated css
+    "layout": "layout.html.jade", //Default layout file
+    "templates": "templates", //Directory where front end templates are stored; they are fed as strings to your pages
+    "pages": { //Override settings for individual pages
+      "index.html": {
+        "title": "Welcome to Cool App!"
+      }
+    },
+    "proxies": {//Set up proxy routes
+      "/api": {
+        "hostname": "localhost",
+        "port"    : 9000,
+        "path"    : "/"
+      }
+    }
+  }
+
