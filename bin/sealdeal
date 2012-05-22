@@ -11,9 +11,14 @@
 
   server = require('../lib/server');
 
-  config = function() {
-    return JSON.parse(fs.readFileSync('config.json'));
-  };
+  try {
+    config = function() {
+      return JSON.parse(fs.readFileSync('config.json'));
+    };
+  } catch (e) {
+    console.log('Error reading config.json: please check config.json for syntax errors');
+    throw e;
+  }
 
   commands = {
     init: function() {

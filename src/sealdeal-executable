@@ -3,7 +3,11 @@ path     = require 'path'
 sealdeal = require '../lib/sealdeal'
 server   = require '../lib/server'
 
-config = -> JSON.parse fs.readFileSync('config.json')
+try
+  config = -> JSON.parse fs.readFileSync('config.json')
+catch e
+  console.log 'Error reading config.json: please check config.json for syntax errors'
+  throw e
 
 commands =
   init: ->
