@@ -33,6 +33,10 @@ htmlExtensions = {
   'ck': (txt) ->
 }
 
+getFilesAsync = (dir, callback) ->
+  walkAsync = (dir) ->
+    fs.readdir dir, (err, data) ->
+
 walk = (dir, callback) ->
   filenames = fs.readdirSync dir
 
@@ -199,7 +203,7 @@ fileConfig = (filename, config) ->
 
 # Remove Preprocessor extension
 removeExt = (filename, ext) ->
-  newFilename = (/([a-z]*\.[a-z]*)(\.[a-z]*)?$/i).exec(filename)?[1]
+  newFilename = (/([a-z_\-0-9]*\.[a-z_\-0-9]*)(\.[a-z_\-0-9]*)?$/i).exec(filename)?[1]
   if newFilename? then newFilename else false
 
 withoutItem = (array, excluded) ->
@@ -301,8 +305,11 @@ build = (config) ->
   src = config.src
   jsDirs = config.concatJS
   cssDirs = config.concatCSS
-  {src, concatJS, concatCSS} = config
   target = config.build
+  if target and fs.statSync(target).isDirectory()
+    fs.rmdir target
+  else if not target
+    return
 
   files       = getFiles src
   layoutPath  = path.join src, config.layout
@@ -329,7 +336,8 @@ build = (config) ->
       data = fs.readFileSync(filename) unless data
 
       relativeFilename = path.relative src, filename
-      targetFilename = path.join(target, path.join(path.dirname(relativeFilename), removeExt(relativeFilename)))
+      basename = removeExt(relativeFilename) or relativeFilename
+      targetFilename = path.join(target, path.join(path.dirname(relativeFilename), basename))
       writeFileRecursive targetFilename, data
 
   concatToTarget(jsDirsPath,  'js/app.js',   concatJSDir)  if jsDirs?
@@ -369,7 +377,6 @@ preprocessorRoute = (appPath, config) ->
           next()
 
 addProxyRoutes = (app, routesHash) ->
-  #proxy = new httpProxy.RoutingProxy()
   for own route, proxyConfig of routesHash
     do (route) ->
       app.all path.join(route, '*'), (req, res) ->
@@ -395,7 +402,6 @@ addProxyRoutes = (app, routesHash) ->
           proxyReq.write JSON.stringify req.body
 
         proxyReq.end()
-      #proxy.proxyRequest req, res, proxyConfig
 
 
 module.exports.getFiles            = getFiles
