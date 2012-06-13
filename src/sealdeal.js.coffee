@@ -195,7 +195,7 @@ fileConfig = (filename, config) ->
 
   filename: filename
   layout: if config.layout then path.join(config.src, config.layout) else null
-  templates: 'src/templates'
+  templates: config.templates
   templateNamespace: config.templateNamespace or 'APP_TEMPLATES'
   title: title
   pageLocals: pageLocals
