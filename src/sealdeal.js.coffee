@@ -306,7 +306,7 @@ build = (config) ->
   jsDirs = config.concatJS
   cssDirs = config.concatCSS
   target = config.build
-  if target and fs.statSync(target).isDirectory()
+  if target and path.existsSync(target)
     fs.rmdir target
   else if not target
     return

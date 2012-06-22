@@ -6,7 +6,7 @@
 express  = require 'express'
 fs       = require 'fs'
 path     = require 'path'
-sealdeal = require './sealdeal'
+sealdeal = require 'sealdeal'
 
 module.exports =
   run: (config) ->

@@ -31,9 +31,26 @@ config.json:
         "port"    : 9000,
         "path"    : "/"
       }
-    }
+    },
+    "plugins": {
+      "coffee-script": {
+        "plugin-path": "~/my-coffee-script-plugin" //Path to plugin if plugin is not stored in .sealdeal/plugins
+        "directory": "/my-stuff-is-here", //Path to directory where you want your plugin applied; defaults to ./
+        "dataType": "js",
+        "fileType": "coffee",
+        "combine": true
+      }
   }
 
 Projects that inspired sealdeal:
 [Middleman](http://middlemanapp.com/)
 [Grunt](http://gruntjs.com/)
+[Wintersmith](http://jnordberg.github.com/wintersmith/)
+
+Dependencies:
+[ExpressJS](http://expressjs.com/guide.html)
+[CoffeeScript](http://jade-lang.com)
+[Stylus](http://learnboost.github.com/stylus/)
+[nib](http://visionmedia.github.com/nib/)
+[less](lesscss.org)
+
