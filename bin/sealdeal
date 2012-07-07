@@ -29,7 +29,7 @@
       }
       filePath = process.argv[3];
       console.log(filePath);
-      if (!path.existsSync(filePath)) {
+      if (!fs.existsSync(filePath)) {
         fs.mkdir(filePath);
       }
       return sealdeal.copyTree(path.resolve(__dirname, '../site_templates/default'), filePath);
